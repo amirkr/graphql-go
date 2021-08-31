@@ -1,0 +1,25 @@
+# Docker Compose file Reference (https://docs.docker.com/compose/compose-file/)
+
+version: '3'
+
+# Define services
+services:
+
+  mongo:
+    container_name: mongodb
+    image: mongo
+    ports:
+      - "27017:27017" # Forward the exposed port 27017 on the container to port 27017 on the host machine
+    volumes:
+      - ./mongo-volume:/data/db
+
+  # App Service
+  app:
+    container_name: graphql
+    # Configuration for building the docker image for the service
+    build:
+      context: . # Use an image built from the specified dockerfile in the current directory.
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080" # Forward the exposed port 8080 on the container to port 8080 on the host machine
+    restart: unless-stopped
