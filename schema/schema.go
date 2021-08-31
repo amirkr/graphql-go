@@ -1,10 +1,10 @@
 package schema
 
 import (
-	"gitlab.com/amirkerroumi/my-graphql/model"
+	"github.com/amirkr/graphql-go/model"
 	"github.com/graphql-go/graphql"
 	"log"
-	"gitlab.com/amirkerroumi/my-graphql/resolver"
+	"github.com/amirkr/graphql-go/resolver"
 )
 
 func GetSchema() graphql.Schema {

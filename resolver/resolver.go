@@ -1,7 +1,7 @@
 package resolver
 
 import (
-	"gitlab.com/amirkerroumi/my-graphql/model"
+	"github.com/amirkr/graphql-go/model"
 )
 
 func Author(id string) (model.Author, error) {

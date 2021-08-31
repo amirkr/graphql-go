@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/bson"
     "go.mongodb.org/mongo-driver/mongo/options"
-	"gitlab.com/amirkerroumi/my-graphql/model"
+	"github.com/amirkr/graphql-go/model"
 )
 type DB struct {
 	client *mongo.Client

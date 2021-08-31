@@ -1,4 +1,4 @@
-module gitlab.com/amirkerroumi/my-graphql
+module github.com/amirkr/graphql-go
 
 go 1.15
 

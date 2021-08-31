@@ -14,7 +14,7 @@ import (
 	"github.com/graphql-go/graphql"
 	"encoding/json"
 
-	"gitlab.com/amirkerroumi/my-graphql/schema"
+	"github.com/amirkr/graphql-go/schema"
 )
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
