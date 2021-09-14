@@ -3,6 +3,7 @@ module github.com/amirkr/graphql-go
 go 1.15
 
 require (
+	cuelang.org/go v0.4.0
 	github.com/gorilla/mux v1.8.0
 	github.com/graphql-go/graphql v0.7.9
 	go.mongodb.org/mongo-driver v1.7.1

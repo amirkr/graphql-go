@@ -5,13 +5,13 @@ version: '3'
 # Define services
 services:
 
-  mongo:
-    container_name: mongodb
-    image: mongo
-    ports:
-      - "27017:27017" # Forward the exposed port 27017 on the container to port 27017 on the host machine
-    volumes:
-      - ./mongo-volume:/data/db
+  # mongo:
+  #   container_name: mongodb
+  #   image: mongo
+  #   ports:
+  #     - "27017:27017" # Forward the exposed port 27017 on the container to port 27017 on the host machine
+  #   volumes:
+  #     - ./mongo-volume:/data/db
 
   # App Service
   app:
@@ -21,5 +21,5 @@ services:
       context: . # Use an image built from the specified dockerfile in the current directory.
       dockerfile: Dockerfile
     ports:
-      - "8081:8080" # Forward the exposed port 8080 on the container to port 8080 on the host machine
+      - "8085:8080" # Forward the exposed port 8085 on the container to port 8080 on the host machine
     restart: unless-stopped
