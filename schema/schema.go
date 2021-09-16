@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"fmt"
 	"log"
 
 	"cuelang.org/go/cue"
@@ -36,6 +35,10 @@ func GetSchema() graphql.Schema {
 func GenerateAuthorConfig() (objectConfig *graphql.Field) {
 	sysdataSchema := `
 	#sysdata: {
+		lkwd_id: int | *0
+		databaseType: string | *""
+		exportType: string | *""
+		exportCategory: string | *""
 		{
 			if sysdata.databaseType == "apartment" {
 				exportType:     "Areas"
@@ -50,18 +53,16 @@ func GenerateAuthorConfig() (objectConfig *graphql.Field) {
 				exportCategory: "animation"
 			}
 		}
-		databaseType: string | "apartment" | "stg" | "animation"
 		...
 	}
 	sysdata: #sysdata
 	`
-	// log.Println("sysdataSchema: ", sysdataSchema)
 
 	cueSchemaStr := sysdataSchema + `
 	#author: {
-		id: string
-		firstname: string
-		lastname: string
+		id: string | *""
+		firstname: string  | *""
+		lastname: string | *""
 	}
 
 	author: #author
@@ -75,19 +76,15 @@ func GenerateAuthorConfig() (objectConfig *graphql.Field) {
 	}
 	for schemaFields.Next() {
 		objectName := schemaFields.Label()
-		// log.Println("schemaFields IsDefinition? ", schemaFields.IsDefinition())
 		// log.Println(schemaFields.Label(), " ", schemaFields.Value())
 		fieldsConfig := graphql.Fields{}
-		if schemaFields.Label() == "author" {
-			field, err := schemaFields.Value().Fields()
-			if err != nil {
-				log.Println("field Get error: ", err)
-			}
-			for field.Next() {
-				// log.Println("author ", field.Label(), " ", field.Value())
-				fieldsConfig[field.Label()] = &graphql.Field{
-					Type: mapCueTypeToGraphQLType(field.Value()),
-				}
+		field, err := schemaFields.Value().Fields()
+		if err != nil {
+			log.Println("field Get error: ", err)
+		}
+		for field.Next() {
+			fieldsConfig[field.Label()] = &graphql.Field{
+				Type: mapCueTypeToGraphQLType(field.Value()),
 			}
 		}
 		objectConfig = &graphql.Field{
@@ -107,19 +104,21 @@ func GenerateAuthorConfig() (objectConfig *graphql.Field) {
 				return resolver.Author(id)
 			},
 		}
-		log.Printf("NEW v4 objectConfigType: %T", objectConfig)
 	}
 	return objectConfig
 }
 
-func mapCueTypeToGraphQLType(cueType cue.Value) graphql.Output {
-	switch fmt.Sprintf("%t", cueType) {
-		case "int":
-			log.Println()
-			return graphql.Int
-		case "string":
-			return graphql.String
-		default:
-			return nil
+func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
+	graphQLType = nil
+
+	// fieldName, _ := cueType.Label()
+	if _, err := cueType.String(); err == nil {
+		// log.Println("field ", fieldName, " is of type string")
+		graphQLType = graphql.String
+	} else if _, err := cueType.Int64(); err == nil {
+		// log.Println("field ", fieldName, " is of type int")
+		graphQLType = graphql.Int
 	}
+
+	return
 }
