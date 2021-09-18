@@ -35,10 +35,10 @@ func GetSchema() graphql.Schema {
 func GenerateAuthorConfig() (objectConfig *graphql.Field) {
 	sysdataSchema := `
 	#sysdata: {
-		lkwd_id: int
-		isDelete: bool
-		price: float
-		name: string
+		lkwd_id: int | *0
+		isDelete: bool| *false
+		price: float | *0.0
+		name: string | *""
 		databaseType: string | *""
 		exportType: string | *""
 		exportCategory: string | *""
@@ -115,6 +115,14 @@ func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 	graphQLType = nil
 
 	fieldName, _ := cueType.Label()
+
+	if fieldName == "price" {
+		_, err := cueType.Float64()
+		if err != nil {
+			log.Println("float cast error: ", err)
+		}
+	}
+
 	if _, err := cueType.String(); err == nil {
 		log.Println("field ", fieldName, " is of type string")
 		// TODO Check if cueType.Label() contains word id then map to graphql.ID
@@ -129,7 +137,7 @@ func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 		log.Println("field ", fieldName, " is of type float")
 		graphQLType = graphql.Float
 	} else if _, err := cueType.Bool(); err == nil {
-		log.Println("field ", fieldName, " is of type nbool")
+		log.Println("field ", fieldName, " is of type bool")
 		graphQLType = graphql.Boolean
 	} else {
 		log.Println("field ", fieldName, " is of type unknown")
