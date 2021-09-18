@@ -112,35 +112,44 @@ func GenerateAuthorConfig() (objectConfig *graphql.Field) {
 }
 
 func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
-	graphQLType = nil
-
+	cueType, _ = cueType.Default()
 	fieldName, _ := cueType.Label()
+	switch cueType.Kind() {
+		case cue.BoolKind:
+			log.Println(fieldName, "is of type BoolKind")
+			graphQLType = graphql.Boolean
 
-	if fieldName == "price" {
-		_, err := cueType.Float64()
-		if err != nil {
-			log.Println("float cast error: ", err)
-		}
-	}
+		case cue.IntKind:
+			log.Println(fieldName, "is of type IntKind")
+			graphQLType = graphql.Int
 
-	if _, err := cueType.String(); err == nil {
-		log.Println("field ", fieldName, " is of type string")
-		// TODO Check if cueType.Label() contains word id then map to graphql.ID
-		// graphQLType = graphql.ID
-		// TODO IF Attemot to format to date is successful then map to graphql.DateTime
-		// graphQLType = graphql.DateTime
-		graphQLType = graphql.String
-	} else if _, err := cueType.Int64(); err == nil {
-		log.Println("field ", fieldName, " is of type int")
-		graphQLType = graphql.Int
-	} else if _, err := cueType.Float64(); err == nil {
-		log.Println("field ", fieldName, " is of type float")
-		graphQLType = graphql.Float
-	} else if _, err := cueType.Bool(); err == nil {
-		log.Println("field ", fieldName, " is of type bool")
-		graphQLType = graphql.Boolean
-	} else {
-		log.Println("field ", fieldName, " is of type unknown")
+		case cue.FloatKind:
+			log.Println(fieldName, "is of type FloatKind")
+			graphQLType = graphql.Float
+
+		case cue.StringKind:
+			log.Println(fieldName, "is of type StringKind")
+			// TODO Check if cueType.Label() contains word id then map to graphql.ID
+			// graphQLType = graphql.ID
+			// TODO If Attempt to format to date is successful then map to graphql.DateTime
+			// graphQLType = graphql.DateTime
+			graphQLType = graphql.String
+
+		case cue.BytesKind:
+			log.Println(fieldName, "is of type BytesKind")
+
+		case cue.ListKind:
+			log.Println(fieldName, "is of type ListKind")
+
+		case cue.StructKind:
+			log.Println(fieldName, "is of type StructKind")
+
+		case cue.NullKind:
+			// TODO Handle Error
+			log.Println(fieldName, "is of type NullKind")
+
+		default:
+			log.Println(fieldName, "is of type default")
 	}
 
 	return
