@@ -7,6 +7,8 @@ import (
 	"cuelang.org/go/cue/cuecontext"
 
 	// "github.com/amirkr/graphql-go/model"
+	"time"
+
 	"github.com/amirkr/graphql-go/resolver"
 	"github.com/graphql-go/graphql"
 )
@@ -36,6 +38,7 @@ func GenerateAuthorConfig() (objectConfig *graphql.Field) {
 	sysdataSchema := `
 	#sysdata: {
 		lkwd_id: int | *0
+		created_at: string | *"2017-11-11T07:20:50.52Z"
 		isDelete: bool| *false
 		price: float | *0.0
 		name: string | *""
@@ -118,22 +121,29 @@ func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 		case cue.BoolKind:
 			log.Println(fieldName, "is of type BoolKind")
 			graphQLType = graphql.Boolean
+			return
 
 		case cue.IntKind:
 			log.Println(fieldName, "is of type IntKind")
 			graphQLType = graphql.Int
+			return
 
 		case cue.FloatKind:
 			log.Println(fieldName, "is of type FloatKind")
 			graphQLType = graphql.Float
+			return
 
 		case cue.StringKind:
+			cueTypeStr, _ := cueType.String()
+			_, err := time.Parse("2006-03-02T07:20:50.52Z", cueTypeStr)
+			if err == nil {
+				log.Println(fieldName, "is of type DateTime")
+				graphQLType = graphql.DateTime
+				return
+			}
 			log.Println(fieldName, "is of type StringKind")
-			// TODO Check if cueType.Label() contains word id then map to graphql.ID
-			// graphQLType = graphql.ID
-			// TODO If Attempt to format to date is successful then map to graphql.DateTime
-			// graphQLType = graphql.DateTime
 			graphQLType = graphql.String
+			return
 
 		case cue.BytesKind:
 			log.Println(fieldName, "is of type BytesKind")
