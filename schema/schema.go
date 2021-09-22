@@ -135,6 +135,7 @@ func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 
 		case cue.StringKind:
 			cueTypeStr, _ := cueType.String()
+			// TODO Replace with https://github.com/relvacode/iso8601
 			_, err := time.Parse("2006-03-02T07:20:50.52Z", cueTypeStr)
 			if err == nil {
 				log.Println(fieldName, "is of type DateTime")
@@ -145,20 +146,22 @@ func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 			graphQLType = graphql.String
 			return
 
-		case cue.BytesKind:
-			log.Println(fieldName, "is of type BytesKind")
-
 		case cue.ListKind:
+			// TODO Map to a graphql array/list
 			log.Println(fieldName, "is of type ListKind")
 
 		case cue.StructKind:
+			// Recursive
 			log.Println(fieldName, "is of type StructKind")
 
 		case cue.NullKind:
-			// TODO Handle Error
+			// TODO Handle Error to inform at GraphQL dynamic generating
+			//that this cue field has no default value set therefore a dynamic graphql
+			// schema can't be generated
 			log.Println(fieldName, "is of type NullKind")
 
 		default:
+			// Generic System error failed attempt to determine to of fieldname
 			log.Println(fieldName, "is of type default")
 	}
 
