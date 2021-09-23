@@ -11,6 +11,7 @@ import (
 
 	"github.com/amirkr/graphql-go/resolver"
 	"github.com/graphql-go/graphql"
+	"github.com/relvacode/iso8601"
 )
 
 func GetSchema() graphql.Schema {
@@ -35,40 +36,50 @@ func GetSchema() graphql.Schema {
 }
 
 func GenerateAuthorConfig() (objectConfig *graphql.Field) {
-	sysdataSchema := `
-	#sysdata: {
-		lkwd_id: int | *0
-		created_at: string | *"2017-11-11T07:20:50.52Z"
-		isDelete: bool| *false
-		price: float | *0.0
-		name: string | *""
-		databaseType: string | *""
-		exportType: string | *""
-		exportCategory: string | *""
-		{
-			if sysdata.databaseType == "apartment" {
-				exportType:     "Areas"
-				exportCategory: "Apartment"
-			}
-			if sysdata.databaseType == "public_space" {
-				exportType:     "Areas"
-				exportCategory: "Apartment"
-			}
-			if sysdata.databaseType == "animation" {
-				exportType:     "Avakin"
-				exportCategory: "animation"
-			}
-		}
-		...
-	}
-	sysdata: #sysdata
-	`
+	// sysdataSchema := `
+	// #sysdata: {
+	// 	lkwd_id: int | *0
+	// 	created_at: string | *"2017-32-32T07:20:50.52Z"
+	// 	isDelete: bool| *false
+	// 	price: float | *0.0
+	// 	name: string | *""
+	// 	databaseType: string | *""
+	// 	exportType: string | *""
+	// 	exportCategory: string | *""
+	// 	{
+	// 		if sysdata.databaseType == "apartment" {
+	// 			exportType:     "Areas"
+	// 			exportCategory: "Apartment"
+	// 		}
+	// 		if sysdata.databaseType == "public_space" {
+	// 			exportType:     "Areas"
+	// 			exportCategory: "Apartment"
+	// 		}
+	// 		if sysdata.databaseType == "animation" {
+	// 			exportType:     "Avakin"
+	// 			exportCategory: "animation"
+	// 		}
+	// 	}
+	// 	object: {
+	// 		obj_id: int | *0
+	// 		obj_name: string | *""
+	// 	}
+	// 	...
+	// }
+	// sysdata: #sysdata
+	// `
 
-	cueSchemaStr := sysdataSchema + `
+	// cueSchemaStr := sysdataSchema + `
+	cueSchemaStr := `
 	#author: {
 		id: string | *""
 		firstname: string  | *""
 		lastname: string | *""
+		createdat: string | *"2017-10-08T07:20:50.52Z"
+		object: {
+			obj_id: int | *0
+			obj_name: string | *""
+		}
 	}
 
 	author: #author
@@ -81,25 +92,8 @@ func GenerateAuthorConfig() (objectConfig *graphql.Field) {
 		log.Println("schemaFields Get error: ", err)
 	}
 	for schemaFields.Next() {
-		objectName := schemaFields.Label()
-		// log.Println(schemaFields.Label(), " ", schemaFields.Value())
-		fieldsConfig := graphql.Fields{}
-		field, err := schemaFields.Value().Fields()
-		if err != nil {
-			log.Println("field Get error: ", err)
-		}
-		for field.Next() {
-			fieldsConfig[field.Label()] = &graphql.Field{
-				Type: mapCueTypeToGraphQLType(field.Value()),
-			}
-		}
 		objectConfig = &graphql.Field{
-			Type: graphql.NewObject(
-				graphql.ObjectConfig{
-					Name: objectName,
-					Fields: fieldsConfig,
-				},
-			),
+			Type: mapCueStructToGraphQLObject(schemaFields.Value()),
 			Args: graphql.FieldConfigArgument{
 				"id": &graphql.ArgumentConfig{
 					Type: graphql.String,
@@ -111,9 +105,37 @@ func GenerateAuthorConfig() (objectConfig *graphql.Field) {
 			},
 		}
 	}
+
 	return objectConfig
 }
 
+func mapCueStructToGraphQLObject(cueStruct cue.Value) (graphqlObject graphql.Output) {
+    objectName, _ := cueStruct.Label()
+	fieldsConfig := graphql.Fields{}
+	field, err := cueStruct.Value().Fields()
+	if err != nil {
+		log.Println("field Get error: ", err)
+	}
+	for field.Next() {
+		fieldsConfig[field.Label()] = mapCueFieldToGraphQLField(field.Value())
+	}
+
+	graphqlObject = graphql.NewObject(
+		graphql.ObjectConfig{
+			Name: objectName,
+			Fields: fieldsConfig,
+		},
+	)
+
+	return
+}
+
+func mapCueFieldToGraphQLField(cueType cue.Value) (*graphql.Field) {
+	return &graphql.Field{
+		Type: mapCueTypeToGraphQLType(cueType),
+	}
+
+}
 func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 	cueType, _ = cueType.Default()
 	fieldName, _ := cueType.Label()
@@ -136,11 +158,20 @@ func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 		case cue.StringKind:
 			cueTypeStr, _ := cueType.String()
 			// TODO Replace with https://github.com/relvacode/iso8601
+			if fieldName == "createdat" {
+				parsedDatetime, isoErr := iso8601.ParseString(cueTypeStr)
+				if isoErr != nil {
+					log.Println(fieldName, "failed iso8601 mapping: ", isoErr)
+				} else {
+					log.Println(fieldName, "value: ", cueTypeStr, " iso8601 datetime mapping: ", parsedDatetime)
+				}
+			}
+
 			_, err := time.Parse("2006-03-02T07:20:50.52Z", cueTypeStr)
 			if err == nil {
-				log.Println(fieldName, "is of type DateTime")
+				log.Println(fieldName, "is of type time library DateTime: ", cueTypeStr)
 				graphQLType = graphql.DateTime
-				return
+				return mapCueStructToGraphQLObject(cueType)
 			}
 			log.Println(fieldName, "is of type StringKind")
 			graphQLType = graphql.String
@@ -151,8 +182,17 @@ func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 			log.Println(fieldName, "is of type ListKind")
 
 		case cue.StructKind:
-			// Recursive
-			log.Println(fieldName, "is of type StructKind")
+			return mapCueStructToGraphQLObject(cueType)
+			// field, err := cueType.Value().Fields()
+			// if err != nil {
+			// 	log.Println("StructKind field Get error: ", err)
+			// }
+			// for field.Next() {
+			// 	log.Println("StructKind fieldname : ", field.Label(), " fieldvalue: ", field.Value())
+			// }
+			// // mapCueTypeToGraphQLType(cue)
+			// // Recursive
+			// log.Println(fieldName, "is of type StructKind")
 
 		case cue.NullKind:
 			// TODO Handle Error to inform at GraphQL dynamic generating
