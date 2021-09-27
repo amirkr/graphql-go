@@ -140,8 +140,18 @@ func mapCueFieldToGraphQLField(cueType cue.Value) (*graphql.Field) {
 
 }
 
-func mapCueListToGraphQLList(cueType cue.Value) (*graphql.List) {
-	return graphql.NewList( mapCueTypeToGraphQLType(cueType))
+func mapCueListToGraphQLList(cueType cue.Value) (graphqlList *graphql.List) {
+	fieldName, _ := cueType.Label()
+	defaultVal,_ := cueType.Default()
+	listElems, err := defaultVal.List()
+	if err != nil {
+		log.Println("Failed retrieving first default value from ListKind cue.field. Field name: ", fieldName, "error: ", err)
+	}
+	listElems.Next()
+	listElemDefault, _ := listElems.Value().Default()
+
+	graphqlList = graphql.NewList(mapCueTypeToGraphQLType(listElemDefault))
+	return
 }
 
 func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
@@ -167,15 +177,7 @@ func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 			return
 
 		case cue.ListKind:
-			defaultVal,_ := cueType.Default()
-			listElems, err := defaultVal.List()
-			if err != nil {
-				log.Println("Failed retrieving first default value from ListKind cue.field. Field name: ", fieldName, "error: ", err)
-			}
-			listElems.Next()
-			listElemDefault, _ := listElems.Value().Default()
-
-			graphQLType = graphql.NewList(mapCueTypeToGraphQLType(listElemDefault))
+			graphQLType = mapCueListToGraphQLList(cueType)
 			return
 
 		case cue.StructKind:
