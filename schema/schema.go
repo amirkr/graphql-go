@@ -179,10 +179,12 @@ func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 			listElems.Next()
 			listElemDefault, _ := listElems.Value().Default()
 
-			return graphql.NewList(mapCueTypeToGraphQLType(listElemDefault))
+			graphQLType = graphql.NewList(mapCueTypeToGraphQLType(listElemDefault))
+			return
 
 		case cue.StructKind:
-			return mapCueStructToGraphQLObject(cueType)
+			graphQLType = mapCueStructToGraphQLObject(cueType)
+			return
 
 		case cue.NullKind:
 			log.Println("Error: No cue schema default value set for field: ", fieldName)
