@@ -9,4 +9,5 @@ type Author struct {
 		Obj_id int
 		Obj_name string
 	}
+	Editorsid []int
 }

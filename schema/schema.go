@@ -80,6 +80,7 @@ func GenerateAuthorConfig() (objectConfig *graphql.Field) {
 			obj_id: int | *0
 			obj_name: string | *""
 		}
+		editorsid: [int] | *[2,4]
 	}
 
 	author: #author
@@ -136,6 +137,13 @@ func mapCueFieldToGraphQLField(cueType cue.Value) (*graphql.Field) {
 	}
 
 }
+
+func mapCueListToGraphQLList(cueType cue.Value) (*graphql.List) {
+	return graphql.NewList( mapCueTypeToGraphQLType(cueType))
+	// return graphql.NewList( mapCueTypeToGraphQLType(cueType))
+	// return graphql.NewList(cueType.Default().Kind())
+}
+
 func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 	cueType, _ = cueType.Default()
 	fieldName, _ := cueType.Label()
@@ -178,8 +186,29 @@ func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 			return
 
 		case cue.ListKind:
+			elem, _ := cueType.Elem()
+			// defaultVal,_ := elem.Default()
+			intVal, intErr := elem.Int64()
 			// TODO Map to a graphql array/list
-			log.Println(fieldName, "is of type ListKind")
+			log.Println(fieldName, "is of type ListKind | intErr: ", intErr, "intVal: ", intVal)
+			log.Println("is of Type IntKind: ", cueType.Kind().IsAnyOf(cue.IntKind))
+			def,_ := cueType.Value().Eval().Default()
+			log.Println("cueType.Value().Eval().Default(): ", def)
+			defaultVal,_ := cueType.Default()
+			log.Println("cueType.Default(): ", defaultVal)
+			listElems, err := defaultVal.List()
+			if err != nil {
+				log.Println("listElems Get error: ", err)
+			}
+			listElems.Next()
+			log.Println("listElems.Value(): ", listElems.Value())
+			log.Println("listElems.Value().Kind(): ", listElems.Value().Kind())
+			listElemDefault, _ := listElems.Value().Default()
+			log.Println("listElemDefault.Kind(): ", listElemDefault.Kind())
+			log.Println("listElemDefault.Eval().Kind(): ", listElemDefault.Eval().Kind())
+
+			//TODO determine the underlying value kind of a list
+			return graphql.NewList(graphql.Int)
 
 		case cue.StructKind:
 			return mapCueStructToGraphQLObject(cueType)
