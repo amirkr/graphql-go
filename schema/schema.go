@@ -80,7 +80,7 @@ func GenerateAuthorConfig() (objectConfig *graphql.Field) {
 			obj_id: int | *0
 			obj_name: string | *""
 		}
-		editorsid: [int] | *[2,4]
+		editorsid: [string] | *["subzero","zero"]
 	}
 
 	author: #author
@@ -140,8 +140,6 @@ func mapCueFieldToGraphQLField(cueType cue.Value) (*graphql.Field) {
 
 func mapCueListToGraphQLList(cueType cue.Value) (*graphql.List) {
 	return graphql.NewList( mapCueTypeToGraphQLType(cueType))
-	// return graphql.NewList( mapCueTypeToGraphQLType(cueType))
-	// return graphql.NewList(cueType.Default().Kind())
 }
 
 func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
@@ -186,57 +184,24 @@ func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 			return
 
 		case cue.ListKind:
-			// elem, _ := cueType.Elem()
-			// defaultVal,_ := elem.Default()
-			// intVal, intErr := elem.Int64()
-			// TODO Map to a graphql array/list
-			// log.Println(fieldName, "is of type ListKind | intErr: ", intErr, "intVal: ", intVal)
-			// log.Println("is of Type IntKind: ", cueType.Kind().IsAnyOf(cue.IntKind))
-			// def,_ := cueType.Value().Eval().Default()
-			// log.Println("cueType.Value().Eval().Default(): ", def)
 			defaultVal,_ := cueType.Default()
-			log.Println("cueType.Default(): ", defaultVal)
 			listElems, err := defaultVal.List()
 			if err != nil {
-				log.Println("listElems Get error: ", err)
+				log.Println("Failed retrieving first default value from ListKind cue.field. Field name: ", fieldName, "error: ", err)
 			}
 			listElems.Next()
-			// log.Println("listElems.Value(): ", listElems.Value())
-			// log.Println("listElems.Value().Kind(): ", listElems.Value().Kind())
 			listElemDefault, _ := listElems.Value().Default()
-			// log.Println("listElemDefault.Kind(): ", listElemDefault.Kind())
-			// log.Println("listElemDefault.Eval().Kind(): ", listElemDefault.Eval().Kind())
 
-			if listElemDefault.Kind() == cue.IntKind {
-				log.Println("listElemDefault type matches cue.IntKind")
-			}
-
-			//TODO determine the underlying value kind of a list
-			log.Println("\033[34m List underling value return by mapCueTypeToGraphQLType", mapCueTypeToGraphQLType(listElemDefault).String(), "\003[0m")
 			return graphql.NewList(mapCueTypeToGraphQLType(listElemDefault))
 
 		case cue.StructKind:
 			return mapCueStructToGraphQLObject(cueType)
-			// field, err := cueType.Value().Fields()
-			// if err != nil {
-			// 	log.Println("StructKind field Get error: ", err)
-			// }
-			// for field.Next() {
-			// 	log.Println("StructKind fieldname : ", field.Label(), " fieldvalue: ", field.Value())
-			// }
-			// // mapCueTypeToGraphQLType(cue)
-			// // Recursive
-			// log.Println(fieldName, "is of type StructKind")
 
 		case cue.NullKind:
-			// TODO Handle Error to inform at GraphQL dynamic generating
-			//that this cue field has no default value set therefore a dynamic graphql
-			// schema can't be generated
-			log.Println(fieldName, "is of type NullKind")
+			log.Println("Error: No cue schema default value set for field: ", fieldName)
 
 		default:
-			// Generic System error failed attempt to determine to of fieldname
-			log.Println(fieldName, "is of type default")
+			log.Println("error: failed attempt to determine type of field: ", fieldName)
 	}
 
 	return

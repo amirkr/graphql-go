@@ -13,7 +13,7 @@ func Author(id string) (model.Author, error) {
 		Object: struct{Obj_id int; Obj_name string}{
 			10, "name",
 		},
-		Editorsid : []int { 1, 2, 3, 4, 5 },
+		Editorsid : []string { "one", "two", "three", "four", "five" },
 	}
 	return author, nil
 }
