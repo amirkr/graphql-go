@@ -113,7 +113,10 @@ func GenerateAuthorConfig() (objectConfig *graphql.Field) {
 }
 
 func mapCueStructToGraphQLObject(cueStruct cue.Value) (graphqlObject graphql.Output) {
-    objectName, _ := cueStruct.Label()
+    objectName, objNameErr := cueStruct.Label()
+	if objNameErr != true {
+		log.Println("Failed cue.StructKind field name: ", objNameErr)
+	}
 	fieldsConfig := graphql.Fields{}
 	field, err := cueStruct.Value().Fields()
 	if err != nil {
@@ -141,8 +144,14 @@ func mapCueFieldToGraphQLField(cueType cue.Value) (*graphql.Field) {
 }
 
 func mapCueListToGraphQLList(cueType cue.Value) (graphqlList *graphql.List) {
-	fieldName, _ := cueType.Label()
-	defaultVal,_ := cueType.Default()
+	fieldName, objNameErr := cueType.Label()
+	if objNameErr != true {
+		log.Println("Failed retrieving field name, error ", objNameErr)
+	}
+	defaultVal, defaultValErr := cueType.Default()
+	if defaultValErr != true {
+		log.Println("Failed retrieving default value for field: ", fieldName, "error: ", objNameErr)
+	}
 	listElems, err := defaultVal.List()
 	if err != nil {
 		log.Println("Failed retrieving first default value from ListKind cue.field. Field name: ", fieldName, "error: ", err)
@@ -155,8 +164,14 @@ func mapCueListToGraphQLList(cueType cue.Value) (graphqlList *graphql.List) {
 }
 
 func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
-	cueType, _ = cueType.Default()
-	fieldName, _ := cueType.Label()
+	fieldName, objNameErr := cueType.Label()
+	if objNameErr != true {
+		log.Println("Failed retrieving field name, error ", objNameErr)
+	}
+	cueType, defaultValErr := cueType.Default()
+	if defaultValErr != true {
+		log.Println("Failed retrieving default value for field: ", fieldName, "error: ", objNameErr)
+	}
 	switch cueType.Kind() {
 		case cue.BoolKind:
 			graphQLType = graphql.Boolean
