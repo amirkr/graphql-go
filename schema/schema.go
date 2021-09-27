@@ -7,11 +7,9 @@ import (
 	"cuelang.org/go/cue/cuecontext"
 
 	// "github.com/amirkr/graphql-go/model"
-	"time"
 
 	"github.com/amirkr/graphql-go/resolver"
 	"github.com/graphql-go/graphql"
-	"github.com/relvacode/iso8601"
 )
 
 func GetSchema() graphql.Schema {
@@ -100,6 +98,10 @@ func GenerateAuthorConfig() (objectConfig *graphql.Field) {
 					Type: graphql.String,
 				},
 			},
+			// No dynamic resolver for now as it would have to return results as an UnstructuredJSON
+			// and UnstructuredJSON is currently being re-worked not to use gabs json library.
+			// https://github.com/Jeffail/gabs library unfortunately doesn't keep order of json attributes
+			// matching order of struct fields
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				id := p.Args["id"].(string)
 				return resolver.Author(id)
@@ -162,23 +164,8 @@ func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 			return
 
 		case cue.StringKind:
-			cueTypeStr, _ := cueType.String()
-			// TODO Replace with https://github.com/relvacode/iso8601
-			if fieldName == "createdat" {
-				parsedDatetime, isoErr := iso8601.ParseString(cueTypeStr)
-				if isoErr != nil {
-					log.Println(fieldName, "failed iso8601 mapping: ", isoErr)
-				} else {
-					log.Println(fieldName, "value: ", cueTypeStr, " iso8601 datetime mapping: ", parsedDatetime)
-				}
-			}
-
-			_, err := time.Parse("2006-03-02T07:20:50.52Z", cueTypeStr)
-			if err == nil {
-				log.Println(fieldName, "is of type time library DateTime: ", cueTypeStr)
-				graphQLType = graphql.DateTime
-				return mapCueStructToGraphQLObject(cueType)
-			}
+			// Not using graphql.DateTime for datetime strings because
+			// graphql.DateTime uses RFC 3339 and mongomanager-v2 now uses iso8601
 			log.Println(fieldName, "is of type StringKind")
 			graphQLType = graphql.String
 			return
