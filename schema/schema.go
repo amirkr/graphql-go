@@ -149,24 +149,20 @@ func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 	fieldName, _ := cueType.Label()
 	switch cueType.Kind() {
 		case cue.BoolKind:
-			log.Println(fieldName, "is of type BoolKind")
 			graphQLType = graphql.Boolean
 			return
 
 		case cue.IntKind:
-			log.Println(fieldName, "is of type IntKind")
 			graphQLType = graphql.Int
 			return
 
 		case cue.FloatKind:
-			log.Println(fieldName, "is of type FloatKind")
 			graphQLType = graphql.Float
 			return
 
 		case cue.StringKind:
 			// Not using graphql.DateTime for datetime strings because
 			// graphql.DateTime uses RFC 3339 and mongomanager-v2 now uses iso8601
-			log.Println(fieldName, "is of type StringKind")
 			graphQLType = graphql.String
 			return
 
