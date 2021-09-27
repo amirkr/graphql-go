@@ -186,14 +186,14 @@ func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 			return
 
 		case cue.ListKind:
-			elem, _ := cueType.Elem()
+			// elem, _ := cueType.Elem()
 			// defaultVal,_ := elem.Default()
-			intVal, intErr := elem.Int64()
+			// intVal, intErr := elem.Int64()
 			// TODO Map to a graphql array/list
-			log.Println(fieldName, "is of type ListKind | intErr: ", intErr, "intVal: ", intVal)
-			log.Println("is of Type IntKind: ", cueType.Kind().IsAnyOf(cue.IntKind))
-			def,_ := cueType.Value().Eval().Default()
-			log.Println("cueType.Value().Eval().Default(): ", def)
+			// log.Println(fieldName, "is of type ListKind | intErr: ", intErr, "intVal: ", intVal)
+			// log.Println("is of Type IntKind: ", cueType.Kind().IsAnyOf(cue.IntKind))
+			// def,_ := cueType.Value().Eval().Default()
+			// log.Println("cueType.Value().Eval().Default(): ", def)
 			defaultVal,_ := cueType.Default()
 			log.Println("cueType.Default(): ", defaultVal)
 			listElems, err := defaultVal.List()
@@ -201,14 +201,19 @@ func mapCueTypeToGraphQLType(cueType cue.Value) (graphQLType graphql.Output) {
 				log.Println("listElems Get error: ", err)
 			}
 			listElems.Next()
-			log.Println("listElems.Value(): ", listElems.Value())
-			log.Println("listElems.Value().Kind(): ", listElems.Value().Kind())
+			// log.Println("listElems.Value(): ", listElems.Value())
+			// log.Println("listElems.Value().Kind(): ", listElems.Value().Kind())
 			listElemDefault, _ := listElems.Value().Default()
-			log.Println("listElemDefault.Kind(): ", listElemDefault.Kind())
-			log.Println("listElemDefault.Eval().Kind(): ", listElemDefault.Eval().Kind())
+			// log.Println("listElemDefault.Kind(): ", listElemDefault.Kind())
+			// log.Println("listElemDefault.Eval().Kind(): ", listElemDefault.Eval().Kind())
+
+			if listElemDefault.Kind() == cue.IntKind {
+				log.Println("listElemDefault type matches cue.IntKind")
+			}
 
 			//TODO determine the underlying value kind of a list
-			return graphql.NewList(graphql.Int)
+			log.Println("\033[34m List underling value return by mapCueTypeToGraphQLType", mapCueTypeToGraphQLType(listElemDefault).String(), "\003[0m")
+			return graphql.NewList(mapCueTypeToGraphQLType(listElemDefault))
 
 		case cue.StructKind:
 			return mapCueStructToGraphQLObject(cueType)
